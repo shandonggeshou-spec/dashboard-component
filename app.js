@@ -58,15 +58,51 @@ let currentItem = 0;
 const categoryGrid = document.querySelector("#category-nav");
 const detail = document.querySelector("#detail");
 
-function demo(type) {
-  if(type==="select") return '<div class="demo select-demo"><div class="field">请选择地区</div><div class="menu"><span>北京市</span><span>上海市</span><span>广东省</span></div><i class="cursor"></i></div>';
-  if(type==="expand") return '<div class="demo expand-demo"><div class="bar"><i class="dot"></i></div><i class="cursor"></i></div>';
-  if(type==="drag") return '<div class="demo drag-demo"><span class="slot">位置 1</span><span class="slot">放置区域</span><span class="slot">位置 3</span><span class="card">拖动卡片</span><i class="cursor"></i></div>';
-  if(type==="panel") return '<div class="demo panel-demo"><div class="page">当前页面<i></i><i></i><i></i></div><div class="panel"><b>详情面板</b><p>在不离开当前页面的情况下查看和编辑内容。</p></div><i class="cursor"></i></div>';
-  if(type==="nav") return '<div class="demo nav-demo"><div class="side"><span>概览</span><span>数据分析</span><span>成员管理</span><span>设置</span></div><div class="content">内容区域<i></i><i></i><i></i></div><i class="cursor"></i></div>';
-  if(type==="loading") return '<div class="demo load-demo"><i></i><i></i><i></i></div>';
-  if(type==="dashboard") return '<div class="demo dashboard-demo"><i></i><i></i><i></i><i></i></div>';
-  return '<div class="demo chart-demo"><svg viewBox="0 0 360 190"><path class="grid" d="M20 45H340M20 95H340M20 145H340"/><path class="line" d="M20 145L85 120L150 132L215 70L280 92L340 35"/><circle class="point" cx="85" cy="120" r="5"/><circle class="point" cx="215" cy="70" r="5"/><path class="guide" d="M85 20V165"/></svg><i class="cursor"></i></div>';
+function demo(type, item) {
+  const key=`${type}-${item}`;
+  const demos={
+    "select-0":`<button class="ui-select trigger" type="button">请选择地区 <b>⌄</b></button><div class="ui-menu"><button>北京市</button><button>上海市</button><button>广东省</button></div>`,
+    "select-1":`<div class="search-select"><input aria-label="搜索城市" placeholder="搜索城市"><div class="search-options"><button>上海市</button><button>长沙市</button><button>成都市</button><p class="empty">没有匹配项</p></div></div>`,
+    "select-2":`<div class="cascader"><div><button class="chosen">浙江省 ›</button><button>广东省 ›</button></div><div><button>杭州市 ›</button><button>宁波市 ›</button></div><div><button>西湖区</button><button>滨江区</button></div></div><p class="demo-result">浙江省 / 杭州市 / 西湖区</p>`,
+    "select-3":`<div class="multi-field"><span>华东 ×</span><span>华南 ×</span><b>已选 2 项</b></div><div class="check-list"><button class="checked">✓ 华东</button><button class="checked">✓ 华南</button><button>华北</button></div>`,
+    "select-4":`<div class="quick-range"><button>最近 7 天</button><button>最近 30 天</button></div><div class="calendar">${Array.from({length:14},(_,i)=>`<button>${i+1}</button>`).join("")}</div><p class="demo-result">请选择开始日期</p>`,
+    "expand-0":`<button class="pill-toggle" type="button"><i></i><span>已保存</span></button>`,
+    "expand-1":`<div class="accordion-demo"><button class="accordion-head">订单明细 <b>⌄</b></button><div class="accordion-body"><p>商品金额　¥ 1,280</p><p>优惠金额　− ¥ 80</p></div></div>`,
+    "expand-2":`<div class="push-stack"><div class="push-card"><button>查看详情</button><div class="push-detail">本月转化率提升 12%，主要来自自然流量。</div></div><div class="push-card muted-card">下一项内容</div></div>`,
+    "expand-3":`<button class="reveal-trigger">展开成员</button><div class="reveal-list"><span>林晓 · 产品</span><span>陈晨 · 设计</span><span>周可 · 数据</span></div>`,
+    "drag-0":`<div class="sortable-list"><button>⠿　需求评审</button><button>⠿　交互设计</button><button>⠿　开发排期</button></div><p class="demo-result">拖动条目调整顺序</p>`,
+    "drag-1":`<div class="transfer-board"><div class="dropzone"><b>待处理</b><button class="move-card">用户反馈 #42</button></div><div class="dropzone"><b>处理中</b></div><div class="dropzone"><b>已完成</b></div></div>`,
+    "drag-2":`<div class="free-canvas"><span class="guide-x"></span><span class="guide-y"></span><button class="free-node">指标卡</button><button class="fixed-node">趋势图</button></div>`,
+    "drag-3":`<div class="resize-box"><b>可调整卡片</b><span class="size-label">180 × 100</span><button class="resize-handle" aria-label="调整尺寸"></button></div>`,
+    "panel-0":`<div class="tooltip-stage"><button class="info-target">?</button><div class="tooltip-bubble">统计周期内的去重用户数</div></div>`,
+    "panel-1":`<div class="popover-stage"><button class="avatar">YC</button><div class="popover-card"><b>言川</b><button>查看资料</button><button>发送消息</button></div></div>`,
+    "panel-2":`<div class="mini-page"><button class="open-layer">查看详情</button></div><div class="drawer-layer"><button class="close-layer">×</button><b>项目详情</b><p>负责人　林晓</p><p>状态　进行中</p></div>`,
+    "panel-3":`<div class="mini-page"><button class="open-layer">筛选</button></div><div class="sheet-layer"><i></i><b>选择筛选条件</b><button>仅看进行中</button><button>仅看我负责</button></div>`,
+    "panel-4":`<div class="mini-page"><button class="open-layer danger">删除项目</button></div><div class="modal-mask"><div class="modal-card"><b>确认删除？</b><p>删除后无法恢复。</p><button class="cancel">取消</button><button class="confirm">确认删除</button></div></div>`,
+    "nav-0":`<div class="tabs-demo"><div><button class="active">概览</button><button>数据</button><button>成员</button></div><p>概览内容</p></div>`,
+    "nav-1":`<div class="stepper-demo"><ol><li class="done">1 基本信息</li><li class="current">2 配置权限</li><li>3 完成</li></ol><button>下一步</button></div>`,
+    "nav-2":`<nav class="crumb-demo"><button>首页</button><i>›</i><button>项目</button><i>›</i><b>销售看板</b></nav><p class="demo-result">销售看板</p>`,
+    "nav-3":`<div class="collapse-nav"><button class="nav-toggle">☰</button><button><i>⌂</i><span>概览</span></button><button><i>▥</i><span>数据分析</span></button><button><i>⚙</i><span>设置</span></button></div><div class="nav-main">内容区域</div>`,
+    "nav-4":`<div class="anchor-page"><div><section>01 概览</section><section>02 趋势</section><section>03 明细</section></div><nav><button class="active">概览</button><button>趋势</button><button>明细</button></nav></div>`,
+    "loading-0":`<div class="skeleton-card"><div class="sk-title"></div><div class="sk-number"></div><div class="sk-chart"></div><div class="loaded-content"><span>本月收入</span><b>¥ 128,600</b><i></i></div></div>`,
+    "loading-1":`<div class="progress-demo"><b>正在导入数据</b><div><i></i></div><span>0%</span><button>重新播放</button></div>`,
+    "loading-2":`<button class="loading-button"><i></i><span>提交报表</span></button><p class="demo-result">点击按钮提交</p>`,
+    "loading-3":`<div class="inline-layout"><div class="filter-row"><button>近 30 天</button><button>全部渠道</button></div><div class="inline-card"><svg viewBox="0 0 240 80"><path d="M5 65L55 42L105 53L155 20L235 32"/></svg><div class="inline-loader">加载中…</div></div></div>`,
+    "chart-0":chartMarkup("line"),
+    "chart-1":`<div class="bar-chart"><button style="--h:45%" data-value="一月 · 42 万"></button><button style="--h:72%" data-value="二月 · 68 万"></button><button style="--h:58%" data-value="三月 · 55 万"></button><div class="chart-tip">二月 · 68 万</div></div>`,
+    "chart-2":`<div class="legend-demo"><div class="legend-row"><button data-series="a">● 订单量</button><button data-series="b">● 成交额</button></div><svg viewBox="0 0 300 130"><path class="series-a" d="M10 95L65 65L120 78L180 32L235 55L290 20"/><path class="series-b" d="M10 110L65 90L120 48L180 72L235 38L290 58"/></svg></div>`,
+    "chart-3":`<div class="brush-demo"><svg viewBox="0 0 300 130"><path d="M8 100L50 84L92 92L134 45L176 68L218 35L292 52"/></svg><div class="brush-range"></div><button>恢复全部</button></div>`,
+    "chart-4":`<div class="drill-demo"><div class="drill-crumb"><button>全国</button><span></span></div><div class="drill-bars"><button data-region="华东" style="--h:82%">华东</button><button data-region="华南" style="--h:64%">华南</button><button data-region="华北" style="--h:48%">华北</button></div></div>`,
+    "dashboard-0":`<div class="minimal-dash"><header>业务概览 <button>近 30 天⌄</button></header><div><article><span>成交额</span><b>¥ 2.86M</b><em>+12.4%</em></article><article><span>订单量</span><b>18,492</b><em>+6.8%</em></article></div><svg viewBox="0 0 300 70"><path d="M5 62L55 50L105 55L155 28L205 38L250 12L295 22"/></svg></div>`,
+    "dashboard-1":`<div class="bento-dash"><button class="wide">核心指标<b>¥ 2.86M</b></button><button>转化率<b>6.8%</b></button><button>用户数<b>42K</b></button><button class="long">趋势分析</button></div>`,
+    "dashboard-2":`<div class="ops-dash"><header>实时监控 <i></i></header><div><button>服务可用率<b>99.98%</b></button><button class="alert">异常任务<b>3</b></button></div><p>流量 1,248 req/s　 延迟 32ms</p></div>`,
+    "dashboard-3":`<div class="dense-dash"><div class="dense-filters"><button>渠道：全部</button><button>地区：全国</button></div><table><thead><tr><th>业务线</th><th>收入</th><th>同比</th></tr></thead><tbody><tr><td>电商</td><td>286万</td><td>+12%</td></tr><tr><td>广告</td><td>192万</td><td>+8%</td></tr><tr><td>服务</td><td>86万</td><td>−2%</td></tr></tbody></table></div>`
+  };
+  return `<div class="demo component-demo" data-demo="${key}"><div class="demo-scene">${demos[key]}</div></div>`;
+}
+
+function chartMarkup(){
+  return `<div class="cross-chart"><svg viewBox="0 0 300 150"><path class="chart-grid" d="M10 35H290M10 75H290M10 115H290"/><path class="chart-line" d="M10 118L65 90L120 102L180 48L235 70L290 28"/><circle cx="180" cy="48" r="5"/></svg><i class="cross-x"></i><i class="cross-y"></i><div class="cross-tip">4月 · 82万</div></div>`;
 }
 
 function render() {
@@ -76,7 +112,7 @@ function render() {
   document.querySelector("#section-title").textContent=group.name;
   document.querySelector("#section-hint").textContent=group.hint;
   const [name,en,when,effect,prompt]=group.items[currentItem];
-  detail.innerHTML=`<div class="detail-copy"><p class="detail-kicker">${en.toUpperCase()}</p><h3>${name}</h3><p class="summary">${when}</p><div class="keyline"><b>效果</b><span>${effect}</span></div><div class="prompt-box"><span>AI 指令 <button class="copy" type="button">复制</button></span><p>${prompt}</p></div></div><div class="demo-wrap"><div class="demo-label"><span>效果预览</span><div class="demo-switch"><button type="button" data-mode="auto" aria-selected="true">动画演示</button><button type="button" data-mode="manual" aria-selected="false">自己试试</button></div></div>${demo(group.id)}<p class="manual-tip">动画会自动循环播放</p></div>`;
+  detail.innerHTML=`<div class="detail-copy"><p class="detail-kicker">${en.toUpperCase()}</p><h3>${name}</h3><p class="summary">${when}</p><div class="keyline"><b>效果</b><span>${effect}</span></div><div class="prompt-box"><span>AI 指令 <button class="copy" type="button">复制</button></span><p>${prompt}</p></div></div><div class="demo-wrap"><div class="demo-label"><span>效果预览</span><div class="demo-switch"><button type="button" data-mode="auto" aria-selected="true">动画演示</button><button type="button" data-mode="manual" aria-selected="false">自己试试</button></div></div><div class="demo-slot">${demo(group.id,currentItem)}</div><p class="manual-tip">正在自动演示这个组件的核心动作</p></div>`;
   categoryGrid.querySelectorAll(".category").forEach(button=>button.addEventListener("click",()=>{currentGroup=Number(button.dataset.group);currentItem=0;render();}));
   categoryGrid.querySelectorAll(".item").forEach(button=>button.addEventListener("click",()=>{currentItem=Number(button.dataset.item);render();}));
   detail.querySelector(".copy").addEventListener("click",()=>copyText(prompt));
@@ -84,21 +120,62 @@ function render() {
 }
 
 function setDemoMode(mode){
-  const demoEl=detail.querySelector(".demo"), tip=detail.querySelector(".manual-tip");
   detail.querySelectorAll("[data-mode]").forEach(button=>button.setAttribute("aria-selected",String(button.dataset.mode===mode)));
-  demoEl.className=demoEl.className.replace(/ manual-demo| paused| open| active| loaded/g,"");
-  if(mode==="auto"){tip.textContent="动画会自动循环播放";return;}
+  const slot=detail.querySelector(".demo-slot"), type=groups[currentGroup].id;
+  slot.innerHTML=demo(type,currentItem);
+  const demoEl=slot.querySelector(".demo"), tip=detail.querySelector(".manual-tip"), key=demoEl.dataset.demo;
+  if(mode==="auto"){tip.textContent="正在自动演示这个组件的核心动作";return;}
   demoEl.classList.add("manual-demo");
-  const type=groups[currentGroup].id;
-  if(type==="select"){tip.textContent="点击输入框，再点击一个选项";const field=demoEl.querySelector(".field");field.addEventListener("click",()=>demoEl.classList.toggle("open"));demoEl.querySelectorAll(".menu span").forEach(option=>option.addEventListener("click",()=>{field.firstChild.textContent=option.textContent;demoEl.classList.remove("open");tip.textContent=`已选择：${option.textContent}`;}));}
-  if(type==="expand"){tip.textContent="点击圆点，展开或收起状态";demoEl.querySelector(".bar").addEventListener("click",()=>demoEl.classList.toggle("active"));}
-  if(type==="drag"){tip.textContent="拖动卡片，或点击卡片模拟移动";const card=demoEl.querySelector(".card");card.draggable=true;card.addEventListener("dragstart",()=>card.classList.add("dragged"));card.addEventListener("click",()=>{card.classList.toggle("dragged");tip.textContent=card.classList.contains("dragged")?"已移动到新位置":"已回到原位置";});demoEl.querySelectorAll(".slot").forEach(slot=>{slot.addEventListener("dragover",event=>event.preventDefault());slot.addEventListener("drop",()=>{card.classList.add("dragged");tip.textContent="已移动到新位置";});});}
-  if(type==="panel"){tip.textContent="点击页面打开抽屉，点击抽屉关闭";demoEl.addEventListener("click",()=>demoEl.classList.toggle("open"));}
-  if(type==="nav"){tip.textContent="点击左侧导航，展开或收起";demoEl.querySelector(".side").addEventListener("click",()=>demoEl.classList.toggle("open"));}
-  if(type==="loading"){tip.textContent="点击区域，模拟加载完成或重新加载";demoEl.addEventListener("click",()=>{demoEl.classList.toggle("loaded");tip.textContent=demoEl.classList.contains("loaded")?"加载完成":"正在重新加载…";});}
-  if(type==="chart"){tip.textContent="在图表中移动鼠标，查看十字线";const guide=demoEl.querySelector(".guide");demoEl.addEventListener("pointermove",event=>{const rect=demoEl.getBoundingClientRect(),x=Math.max(0,Math.min(170,(event.clientX-rect.left)/rect.width*320-65));guide.style.display="block";demoEl.style.setProperty("--chart-x",`${x}px`);});}
-  if(type==="dashboard"){tip.textContent="点击卡片，切换重点区域";demoEl.addEventListener("click",()=>demoEl.classList.toggle("active"));}
+  bindManualDemo(demoEl,key,tip);
 }
+
+function bindManualDemo(root,key,tip){
+  const $=selector=>root.querySelector(selector), $$=selector=>[...root.querySelectorAll(selector)];
+  const say=text=>tip.textContent=text;
+  const toggle=(selector,className="open")=>$(selector)?.classList.toggle(className);
+  const instructions={select:["点击下拉框选择地区","输入城市名称筛选结果","依次点击省、市、区","点击选项添加或取消多选","点击开始日和结束日"],expand:["点击圆点展开状态","点击标题展开或收起正文","点击查看详情，观察下方内容被推开","点击按钮，查看列表依次进入"],drag:["拖动条目调整顺序","把卡片拖到另一列，也可以直接点目标列","拖动画布中的指标卡","拖动右下角把手调整大小"],panel:["悬停或点击问号查看提示","点击头像打开操作气泡","点击查看详情打开右侧抽屉","点击筛选打开底部面板","点击删除项目打开确认弹窗"],nav:["点击标签切换同级内容","点击下一步推进流程","点击前级面包屑返回","点击菜单按钮收起或展开侧栏","点击目录定位章节"],loading:["点击卡片切换加载与完成状态","点击重新播放进度","点击按钮模拟提交","点击图表区域局部刷新"],chart:["在图表内移动鼠标读取数值","悬停或点击柱子查看数值","点击图例隐藏或恢复数据系列","在图表中横向拖动框选范围","点击地区进入下一层明细"],dashboard:["点击指标查看重点状态","点击卡片切换重点模块","点击异常任务查看告警状态","点击筛选器切换分析范围"]};
+  const [type,indexText]=key.split("-"), index=Number(indexText); say(instructions[type][index]);
+
+  if(key==="select-0"){$(".trigger").onclick=()=>toggle(".ui-menu");$$('.ui-menu button').forEach(b=>b.onclick=()=>{$('.trigger').firstChild.textContent=`${b.textContent} `;toggle('.ui-menu');say(`已选择：${b.textContent}`);});}
+  if(key==="select-1"){const input=$("input");input.oninput=()=>{let count=0;$$('.search-options button').forEach(b=>{const show=b.textContent.includes(input.value);b.hidden=!show;if(show)count++;});$('.empty').style.display=count?'none':'block';say(count?`找到 ${count} 个结果`:'没有匹配项');};$$('.search-options button').forEach(b=>b.onclick=()=>{input.value=b.textContent;say(`已选择：${b.textContent}`);});input.focus();}
+  if(key==="select-2"){$$('.cascader button').forEach(b=>b.onclick=()=>{b.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('chosen'));b.classList.add('chosen');$('.demo-result').textContent=`当前选择：${b.textContent.replace(' ›','')}`;});}
+  if(key==="select-3"){$$('.check-list button').forEach(b=>b.onclick=()=>{b.classList.toggle('checked');b.textContent=(b.classList.contains('checked')?'✓ ':'')+b.textContent.replace('✓ ','');const n=$$('.check-list .checked').length;$('.multi-field b').textContent=`已选 ${n} 项`;say(`当前已选 ${n} 项`);});}
+  if(key==="select-4"){let start=null;$$('.calendar button').forEach(b=>b.onclick=()=>{const day=Number(b.textContent);if(start===null){start=day;$$('.calendar button').forEach(x=>x.classList.remove('range','edge'));b.classList.add('edge');$('.demo-result').textContent=`开始日：${day} 日，请选择结束日`;}else{const a=Math.min(start,day),z=Math.max(start,day);$$('.calendar button').forEach(x=>{const n=Number(x.textContent);x.classList.toggle('range',n>=a&&n<=z);x.classList.toggle('edge',n===a||n===z);});$('.demo-result').textContent=`已选择：${a} 日 — ${z} 日`;say(`已选择 ${z-a+1} 天`);start=null;}});$$('.quick-range button').forEach(b=>b.onclick=()=>say(`已选择：${b.textContent}`));}
+  if(key==="expand-0"){$('.pill-toggle').onclick=()=>{toggle('.pill-toggle','open');say($('.pill-toggle').classList.contains('open')?'状态已展开':'状态已收起');};}
+  if(key==="expand-1"){$('.accordion-head').onclick=()=>{toggle('.accordion-demo');say($('.accordion-demo').classList.contains('open')?'订单明细已展开':'订单明细已收起');};}
+  if(key==="expand-2"){$('.push-card button').onclick=()=>{toggle('.push-stack');say($('.push-stack').classList.contains('open')?'详情已展开，下方内容被推开':'详情已收起');};}
+  if(key==="expand-3"){$('.reveal-trigger').onclick=()=>{toggle('.reveal-list','open');say($('.reveal-list').classList.contains('open')?'成员已依次展开':'成员已收起');};}
+  if(key==="drag-0") makeSortable($('.sortable-list'),say);
+  if(key==="drag-1"){const card=$('.move-card');makeDraggable(card,root,(x)=>{const zones=$$('.dropzone');const zone=zones.find(z=>{const r=z.getBoundingClientRect();return x>=r.left&&x<=r.right;});if(zone){zone.append(card);say(`已移动到：${zone.querySelector('b').textContent}`);}});$$('.dropzone').forEach(z=>z.onclick=e=>{if(e.target===z||e.target.tagName==='B'){z.append(card);say(`已移动到：${z.querySelector('b').textContent}`);}});}
+  if(key==="drag-2") makeFreeMove($('.free-node'),$('.free-canvas'),say);
+  if(key==="drag-3") makeResize($('.resize-box'),$('.resize-handle'),say);
+  if(key==="panel-0"){$('.info-target').onclick=()=>toggle('.tooltip-stage');}
+  if(key==="panel-1"){$('.avatar').onclick=()=>toggle('.popover-stage');}
+  if(type==="panel"&&index>=2){$('.open-layer').onclick=()=>{root.classList.add('open');say('已打开，可点击关闭或完成操作');};$('.close-layer')?.addEventListener('click',()=>root.classList.remove('open'));$('.cancel')?.addEventListener('click',()=>root.classList.remove('open'));$('.confirm')?.addEventListener('click',()=>{root.classList.remove('open');say('项目已删除（演示）');});$('.sheet-layer')?.addEventListener('click',()=>root.classList.remove('open'));}
+  if(key==="nav-0"){$$('.tabs-demo button').forEach(b=>b.onclick=()=>{$$('.tabs-demo button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('.tabs-demo p').textContent=`${b.textContent}内容`;say(`已切换到：${b.textContent}`);});}
+  if(key==="nav-1"){let step=2;$('.stepper-demo button').onclick=()=>{step=step===3?1:step+1;$$('.stepper-demo li').forEach((li,i)=>{li.className=i+1<step?'done':i+1===step?'current':'';});say(`当前第 ${step} 步`);};}
+  if(key==="nav-2"){$$('.crumb-demo button').forEach(b=>b.onclick=()=>{$('.demo-result').textContent=b.textContent;say(`已返回：${b.textContent}`);});}
+  if(key==="nav-3"){$('.nav-toggle').onclick=()=>{toggle('.collapse-nav','collapsed');say($('.collapse-nav').classList.contains('collapsed')?'侧栏已收起':'侧栏已展开');};}
+  if(key==="nav-4"){$$('.anchor-page nav button').forEach((b,i)=>b.onclick=()=>{$$('.anchor-page nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('.anchor-page section').parentElement.style.transform=`translateY(-${i*72}px)`;say(`已定位到：${b.textContent}`);});}
+  if(key==="loading-0"){$('.skeleton-card').onclick=()=>{toggle('.skeleton-card','complete');say($('.skeleton-card').classList.contains('complete')?'真实内容已淡入':'重新显示骨架结构');};}
+  if(key==="loading-1"){$('.progress-demo button').onclick=()=>runProgress(root,say);}
+  if(key==="loading-2"){$('.loading-button').onclick=()=>{const b=$('.loading-button');if(b.classList.contains('loading'))return;b.classList.add('loading');b.querySelector('span').textContent='提交中';say('正在提交，请稍候…');setTimeout(()=>{b.classList.remove('loading');b.classList.add('success');b.querySelector('span').textContent='提交成功';say('提交成功');},900);};}
+  if(key==="loading-3"){$('.inline-card').onclick=()=>{$('.inline-loader').classList.add('show');say('只刷新当前图表，筛选仍可操作');setTimeout(()=>{$('.inline-loader').classList.remove('show');say('图表刷新完成');},900);};}
+  if(key==="chart-0"){const chart=$('.cross-chart');chart.onpointermove=e=>{const r=chart.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;root.style.setProperty('--mx',`${x}px`);root.style.setProperty('--my',`${y}px`);root.classList.add('tracking');$('.cross-tip').textContent=`${Math.max(1,Math.round(x/r.width*12))}月 · ${Math.round((1-y/r.height)*90+20)}万`;};chart.onpointerleave=()=>root.classList.remove('tracking');}
+  if(key==="chart-1"){$$('.bar-chart button').forEach(b=>{const show=()=>{$('.chart-tip').textContent=b.dataset.value;$('.chart-tip').style.left=`${b.offsetLeft+b.offsetWidth/2}px`;};b.onpointerenter=show;b.onclick=show;});}
+  if(key==="chart-2"){$$('.legend-row button').forEach(b=>b.onclick=()=>{b.classList.toggle('off');root.classList.toggle(`hide-${b.dataset.series}`);say(`${b.textContent.replace('● ','')}已${b.classList.contains('off')?'隐藏':'恢复'}`);});}
+  if(key==="chart-3") makeBrush($('.brush-demo'),say);
+  if(key==="chart-4"){$$('.drill-bars button').forEach(b=>b.onclick=()=>drill(root,b.dataset.region,say));$('.drill-crumb button').onclick=()=>setDemoMode('manual');}
+  if(type==="dashboard"){$$('button').forEach(b=>b.onclick=()=>{root.querySelectorAll('.focused').forEach(x=>x.classList.remove('focused'));b.classList.add('focused');say(`已聚焦：${b.textContent.trim()}`);});}
+}
+
+function makeDraggable(el,bounds,onDrop){let startX=0,startY=0;el.onpointerdown=e=>{e.preventDefault();startX=e.clientX;startY=e.clientY;el.setPointerCapture(e.pointerId);el.classList.add('dragging');};el.onpointermove=e=>{if(!el.hasPointerCapture(e.pointerId))return;el.style.transform=`translate(${e.clientX-startX}px,${e.clientY-startY}px)`;};el.onpointerup=e=>{if(!el.hasPointerCapture(e.pointerId))return;el.releasePointerCapture(e.pointerId);el.classList.remove('dragging');el.style.transform='';onDrop(e.clientX,e.clientY);};}
+function makeSortable(list,say){let dragged=null;[...list.children].forEach(item=>{item.onpointerdown=e=>{dragged=item;item.setPointerCapture(e.pointerId);item.classList.add('dragging');};item.onpointermove=e=>{if(!dragged)return;const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('.sortable-list button');if(target&&target!==dragged)list.insertBefore(dragged,e.clientY<target.getBoundingClientRect().top+target.offsetHeight/2?target:target.nextSibling);};item.onpointerup=e=>{item.releasePointerCapture(e.pointerId);item.classList.remove('dragging');dragged=null;say('顺序已更新，可继续拖动');};});}
+function makeFreeMove(node,canvas,say){node.onpointerdown=e=>{node.setPointerCapture(e.pointerId);node.dataset.dx=e.clientX-node.offsetLeft;node.dataset.dy=e.clientY-node.offsetTop;};node.onpointermove=e=>{if(!node.hasPointerCapture(e.pointerId))return;const x=Math.max(0,Math.min(canvas.clientWidth-node.offsetWidth,e.clientX-Number(node.dataset.dx))),y=Math.max(0,Math.min(canvas.clientHeight-node.offsetHeight,e.clientY-Number(node.dataset.dy)));node.style.left=`${x}px`;node.style.top=`${y}px`;canvas.classList.toggle('aligned',Math.abs(x-(canvas.clientWidth-node.offsetWidth)/2)<12);};node.onpointerup=e=>{node.releasePointerCapture(e.pointerId);say(canvas.classList.contains('aligned')?'已吸附到中心参考线':'节点位置已更新');};}
+function makeResize(box,handle,say){handle.onpointerdown=e=>{e.preventDefault();handle.setPointerCapture(e.pointerId);handle.dataset.x=e.clientX;handle.dataset.y=e.clientY;handle.dataset.w=box.offsetWidth;handle.dataset.h=box.offsetHeight;};handle.onpointermove=e=>{if(!handle.hasPointerCapture(e.pointerId))return;const w=Math.max(140,Math.min(260,Number(handle.dataset.w)+e.clientX-Number(handle.dataset.x))),h=Math.max(80,Math.min(160,Number(handle.dataset.h)+e.clientY-Number(handle.dataset.y)));box.style.width=`${w}px`;box.style.height=`${h}px`;box.querySelector('.size-label').textContent=`${Math.round(w)} × ${Math.round(h)}`;};handle.onpointerup=e=>{handle.releasePointerCapture(e.pointerId);say(`尺寸已调整为 ${box.querySelector('.size-label').textContent}`);};}
+function runProgress(root,say){const bar=root.querySelector('.progress-demo i'),label=root.querySelector('.progress-demo span');bar.style.width='0';let n=0;const timer=setInterval(()=>{n+=4;bar.style.width=`${n}%`;label.textContent=`${n}%`;if(n>=100){clearInterval(timer);say('导入完成');}},35);}
+function makeBrush(chart,say){let start=0;const range=chart.querySelector('.brush-range');chart.onpointerdown=e=>{const r=chart.getBoundingClientRect();start=e.clientX-r.left;chart.setPointerCapture(e.pointerId);range.style.left=`${start}px`;range.style.width='0';};chart.onpointermove=e=>{if(!chart.hasPointerCapture(e.pointerId))return;const x=e.clientX-chart.getBoundingClientRect().left;range.style.left=`${Math.min(start,x)}px`;range.style.width=`${Math.abs(x-start)}px`;};chart.onpointerup=e=>{chart.releasePointerCapture(e.pointerId);say('已放大所选时间范围');};chart.querySelector('button').onclick=()=>{range.style.width='0';say('已恢复全部范围');};}
+function drill(root,region,say){root.querySelector('.drill-crumb span').textContent=`› ${region}`;const names=region==='华东'?['上海','浙江','江苏']:region==='华南'?['广东','福建','海南']:['北京','河北','山东'];root.querySelector('.drill-bars').innerHTML=names.map((name,i)=>`<button style="--h:${75-i*15}%">${name}</button>`).join('');say(`已下钻到：${region}`);}
 
 function copyText(text){navigator.clipboard?.writeText(text).then(showToast).catch(()=>{const input=document.createElement("textarea");input.value=text;document.body.append(input);input.select();document.execCommand("copy");input.remove();showToast();});}
 function showToast(){const toast=document.querySelector("#toast");toast.classList.add("show");clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.classList.remove("show"),1300);}
