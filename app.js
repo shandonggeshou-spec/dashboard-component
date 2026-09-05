@@ -102,6 +102,7 @@ const groups = [
 let currentGroup = 0;
 let currentItem = 0;
 const categoryGrid = document.querySelector("#category-nav");
+const primaryTabs = document.querySelector("#primary-tabs");
 const detail = document.querySelector("#detail");
 const locationTree = [
   {name:"浙江省",children:[{name:"杭州市",children:["西湖区","滨江区","余杭区"]},{name:"宁波市",children:["海曙区","鄞州区","北仑区"]}]},
@@ -215,8 +216,11 @@ function chartMarkup(){
 
 function render() {
   recent=[itemId(),...recent.filter(id=>id!==itemId())].slice(0,8);localStorage.setItem(recentKey,JSON.stringify(recent));
-  categoryGrid.innerHTML = groups.map((group,index)=>`<div class="category-group"><button class="category" type="button" data-group="${index}" aria-selected="${index===currentGroup}" aria-expanded="${index===currentGroup}"><span>${String(index+1).padStart(2,"0")}</span><strong>${group.name}</strong><small>${group.items.length}</small></button>${index===currentGroup?`<div class="subnav ${group.id==='chart'?'grouped':''}" aria-label="${group.name}组件">${group.items.map((item,itemIndex)=>`${group.id==='chart'&&(itemIndex===0||item[5]!==group.items[itemIndex-1]?.[5])?`<p class="subnav-label">${item[5]}</p>`:''}<button class="item" type="button" data-item="${itemIndex}" aria-selected="${itemIndex===currentItem}">${item[0]}</button>`).join("")}</div>`:""}</div>`).join("");
   const group=groups[currentGroup];
+  primaryTabs.innerHTML=groups.map((tab,index)=>`<button type="button" data-group="${index}" aria-selected="${index===currentGroup}"><span>${tab.name}</span><small>${tab.items.length}</small></button>`).join('');
+  requestAnimationFrame(()=>primaryTabs.querySelector('[aria-selected="true"]')?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}));
+  categoryGrid.innerHTML=`<div class="subnav ${group.id==='chart'?'grouped':''}" aria-label="${group.name}组件">${group.items.map((item,itemIndex)=>`${group.id==='chart'&&(itemIndex===0||item[5]!==group.items[itemIndex-1]?.[5])?`<p class="subnav-label">${item[5]}</p>`:''}<button class="item" type="button" data-item="${itemIndex}" aria-selected="${itemIndex===currentItem}">${item[0]}</button>`).join("")}</div>`;
+  document.querySelector('#sidebar-title').textContent=group.name;
   document.querySelector("#section-kicker").textContent=group.id.toUpperCase();
   document.querySelector("#section-title").textContent=group.name;
   document.querySelector("#section-hint").textContent=group.hint;
@@ -225,7 +229,7 @@ function render() {
   const related=searchIndex.filter(item=>item.category===(group.items[currentItem][5]||group.hint)&&!(item.groupIndex===currentGroup&&item.itemIndex===currentItem)).slice(0,3);
   const combos=(comboNames[group.id]||[]).map(combo=>searchIndex.find(item=>item.name===combo)).filter(Boolean);
   detail.innerHTML=`<div class="detail-copy"><div class="detail-topline"><p class="detail-kicker">${en.toUpperCase()}</p><button class="favorite" type="button" aria-pressed="${favorites.has(itemId())}">${favorites.has(itemId())?'★ 已收藏':'☆ 收藏'}</button></div><h3>${name}</h3><p class="summary">${when}</p><div class="keyline"><b>效果</b><span>${effect}</span></div><div class="prompt-box"><span>AI 指令 <button class="copy" type="button">复制</button></span><p>${prompt}</p></div>${combos.length?`<div class="related combo"><b>常用组合</b>${combos.map(item=>`<button data-go="${item.groupIndex}-${item.itemIndex}">${item.name}</button>`).join('')}</div>`:''}${related.length?`<div class="related"><b>相似模式</b>${related.map(item=>`<button data-go="${item.groupIndex}-${item.itemIndex}">${item.name}</button>`).join('')}</div>`:''}<div class="detail-pager">${previous?`<button data-go="${previous.groupIndex}-${previous.itemIndex}"><small>上一个</small>${previous.name}</button>`:'<span></span>'}${next?`<button data-go="${next.groupIndex}-${next.itemIndex}"><small>下一个</small>${next.name}</button>`:'<span></span>'}</div></div><div class="demo-wrap"><div class="demo-label"><span>效果预览</span><div class="demo-switch"><button type="button" data-mode="auto" aria-selected="true">动画演示</button><button type="button" data-mode="manual" aria-selected="false">自己试试</button></div></div><div class="demo-slot">${demo(group.id,currentItem)}</div><p class="manual-tip">正在自动演示这个组件的核心动作</p></div>`;
-  categoryGrid.querySelectorAll(".category").forEach(button=>button.addEventListener("click",()=>{currentGroup=Number(button.dataset.group);currentItem=0;render();}));
+  primaryTabs.querySelectorAll("button").forEach(button=>button.addEventListener("click",()=>{currentGroup=Number(button.dataset.group);currentItem=0;render();document.querySelector('.sidebar').scrollTop=0;}));
   categoryGrid.querySelectorAll(".item").forEach(button=>button.addEventListener("click",()=>{currentItem=Number(button.dataset.item);render();}));
   detail.querySelector(".copy").addEventListener("click",()=>copyText(prompt));
   detail.querySelector(".favorite").addEventListener("click",()=>{const id=itemId();favorites.has(id)?favorites.delete(id):favorites.add(id);localStorage.setItem(favoriteKey,JSON.stringify([...favorites]));render();});
