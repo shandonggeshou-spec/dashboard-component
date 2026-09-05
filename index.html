@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="常用数据产品组件、交互演示与 AI 指令速查">
+  <title>数据产品组件手册</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top"><span>DP</span>数据产品组件手册</a>
+    <a class="top-link" href="#prompt">AI 指令公式</a>
+  </header>
+
+  <main id="top">
+    <section class="intro">
+      <p class="eyebrow">INTERACTION QUICK GUIDE</p>
+      <h1>选对组件，<br>一句话说给 AI。</h1>
+      <p>按任务查找常用组件。每种类型只讲三件事：什么时候用、效果是什么、怎么描述。</p>
+      <a class="primary" href="#guide">开始查看</a>
+    </section>
+
+    <section class="guide" id="guide">
+      <div class="section-title"><p class="eyebrow">COMPONENT GUIDE</p><h2>你现在想做什么？</h2></div>
+      <div class="category-grid" id="category-grid" aria-label="组件分类"></div>
+
+      <div class="browser">
+        <aside class="item-list" id="item-list" aria-label="模式列表"></aside>
+        <article class="detail" id="detail" aria-live="polite"></article>
+      </div>
+    </section>
+
+    <section class="prompt-section" id="prompt">
+      <div>
+        <p class="eyebrow">ONE SENTENCE FORMULA</p>
+        <h2>一条好指令，只需四件事</h2>
+        <p class="muted">组件是什么、用户怎么触发、它出现在哪里、操作后发生什么。</p>
+      </div>
+      <div class="formula"><span>组件</span><i>+</i><span>触发</span><i>+</i><span>位置</span><i>+</i><span>结果</span></div>
+      <div class="example"><b>例</b><p>做一个右侧抽屉。点击“查看详情”时从页面右侧滑入，宽 360px；关闭后回到原页面位置。</p><button type="button" data-copy="做一个右侧抽屉。点击“查看详情”时从页面右侧滑入，宽 360px；关闭后回到原页面位置。">复制</button></div>
+    </section>
+  </main>
+
+  <footer>根据 11 支视频整理，并用通用产品设计术语校准。</footer>
+  <div class="toast" id="toast" role="status">已复制</div>
+  <script src="app.js"></script>
+</body>
+</html>
