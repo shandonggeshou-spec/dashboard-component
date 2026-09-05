@@ -56,7 +56,6 @@ const groups = [
 let currentGroup = 0;
 let currentItem = 0;
 const categoryGrid = document.querySelector("#category-nav");
-const itemList = document.querySelector("#subnav");
 const detail = document.querySelector("#detail");
 
 function demo(type) {
@@ -71,16 +70,15 @@ function demo(type) {
 }
 
 function render() {
-  categoryGrid.innerHTML = groups.map((group,index)=>`<button class="category" type="button" data-group="${index}" aria-selected="${index===currentGroup}"><span>${String(index+1).padStart(2,"0")}</span><strong>${group.name}</strong></button>`).join("");
+  categoryGrid.innerHTML = groups.map((group,index)=>`<div class="category-group"><button class="category" type="button" data-group="${index}" aria-selected="${index===currentGroup}" aria-expanded="${index===currentGroup}"><span>${String(index+1).padStart(2,"0")}</span><strong>${group.name}</strong></button>${index===currentGroup?`<div class="subnav" aria-label="${group.name}组件">${group.items.map((item,itemIndex)=>`<button class="item" type="button" data-item="${itemIndex}" aria-selected="${itemIndex===currentItem}">${item[0]}</button>`).join("")}</div>`:""}</div>`).join("");
   const group=groups[currentGroup];
   document.querySelector("#section-kicker").textContent=group.id.toUpperCase();
   document.querySelector("#section-title").textContent=group.name;
   document.querySelector("#section-hint").textContent=group.hint;
-  itemList.innerHTML=group.items.map((item,index)=>`<button class="item" type="button" data-item="${index}" aria-selected="${index===currentItem}">${item[0]}</button>`).join("");
   const [name,en,when,effect,prompt]=group.items[currentItem];
   detail.innerHTML=`<div class="detail-copy"><p class="detail-kicker">${en.toUpperCase()}</p><h3>${name}</h3><p class="summary">${when}</p><div class="keyline"><b>效果</b><span>${effect}</span></div><div class="prompt-box"><span>AI 指令 <button class="copy" type="button">复制</button></span><p>${prompt}</p></div></div><div class="demo-wrap"><div class="demo-label"><span>效果预览</span><div class="demo-switch"><button type="button" data-mode="auto" aria-selected="true">动画演示</button><button type="button" data-mode="manual" aria-selected="false">自己试试</button></div></div>${demo(group.id)}<p class="manual-tip">动画会自动循环播放</p></div>`;
-  categoryGrid.querySelectorAll("button").forEach(button=>button.addEventListener("click",()=>{currentGroup=Number(button.dataset.group);currentItem=0;render();}));
-  itemList.querySelectorAll("button").forEach(button=>button.addEventListener("click",()=>{currentItem=Number(button.dataset.item);render();}));
+  categoryGrid.querySelectorAll(".category").forEach(button=>button.addEventListener("click",()=>{currentGroup=Number(button.dataset.group);currentItem=0;render();}));
+  categoryGrid.querySelectorAll(".item").forEach(button=>button.addEventListener("click",()=>{currentItem=Number(button.dataset.item);render();}));
   detail.querySelector(".copy").addEventListener("click",()=>copyText(prompt));
   detail.querySelectorAll("[data-mode]").forEach(button=>button.addEventListener("click",()=>setDemoMode(button.dataset.mode)));
 }
