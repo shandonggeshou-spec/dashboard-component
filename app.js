@@ -55,8 +55,8 @@ const groups = [
 
 let currentGroup = 0;
 let currentItem = 0;
-const categoryGrid = document.querySelector("#category-grid");
-const itemList = document.querySelector("#item-list");
+const categoryGrid = document.querySelector("#category-nav");
+const itemList = document.querySelector("#subnav");
 const detail = document.querySelector("#detail");
 
 function demo(type) {
@@ -71,15 +71,35 @@ function demo(type) {
 }
 
 function render() {
-  categoryGrid.innerHTML = groups.map((group,index)=>`<button class="category" type="button" data-group="${index}" aria-selected="${index===currentGroup}"><span>${String(index+1).padStart(2,"0")}</span><strong>${group.name}</strong><small>${group.hint}</small></button>`).join("");
+  categoryGrid.innerHTML = groups.map((group,index)=>`<button class="category" type="button" data-group="${index}" aria-selected="${index===currentGroup}"><span>${String(index+1).padStart(2,"0")}</span><strong>${group.name}</strong></button>`).join("");
   const group=groups[currentGroup];
-  itemList.innerHTML=group.items.map((item,index)=>`<button class="item" type="button" data-item="${index}" aria-selected="${index===currentItem}">${item[0]}<small>${item[1]}</small></button>`).join("");
+  document.querySelector("#section-kicker").textContent=group.id.toUpperCase();
+  document.querySelector("#section-title").textContent=group.name;
+  document.querySelector("#section-hint").textContent=group.hint;
+  itemList.innerHTML=group.items.map((item,index)=>`<button class="item" type="button" data-item="${index}" aria-selected="${index===currentItem}">${item[0]}</button>`).join("");
   const [name,en,when,effect,prompt]=group.items[currentItem];
-  detail.innerHTML=`<div class="detail-copy"><p class="detail-kicker">${en.toUpperCase()}</p><h3>${name}</h3><p class="summary">${when}</p><div class="keyline"><b>效果</b><span>${effect}</span></div><div class="prompt-box"><span>AI 指令 <button class="copy" type="button">复制</button></span><p>${prompt}</p></div></div><div class="demo-wrap"><div class="demo-label"><span>循环演示</span><button class="pause" type="button">暂停</button></div>${demo(group.id)}</div>`;
+  detail.innerHTML=`<div class="detail-copy"><p class="detail-kicker">${en.toUpperCase()}</p><h3>${name}</h3><p class="summary">${when}</p><div class="keyline"><b>效果</b><span>${effect}</span></div><div class="prompt-box"><span>AI 指令 <button class="copy" type="button">复制</button></span><p>${prompt}</p></div></div><div class="demo-wrap"><div class="demo-label"><span>效果预览</span><div class="demo-switch"><button type="button" data-mode="auto" aria-selected="true">动画演示</button><button type="button" data-mode="manual" aria-selected="false">自己试试</button></div></div>${demo(group.id)}<p class="manual-tip">动画会自动循环播放</p></div>`;
   categoryGrid.querySelectorAll("button").forEach(button=>button.addEventListener("click",()=>{currentGroup=Number(button.dataset.group);currentItem=0;render();}));
   itemList.querySelectorAll("button").forEach(button=>button.addEventListener("click",()=>{currentItem=Number(button.dataset.item);render();}));
   detail.querySelector(".copy").addEventListener("click",()=>copyText(prompt));
-  detail.querySelector(".pause").addEventListener("click",event=>{const el=detail.querySelector(".demo");const paused=el.classList.toggle("paused");event.currentTarget.textContent=paused?"播放":"暂停";});
+  detail.querySelectorAll("[data-mode]").forEach(button=>button.addEventListener("click",()=>setDemoMode(button.dataset.mode)));
+}
+
+function setDemoMode(mode){
+  const demoEl=detail.querySelector(".demo"), tip=detail.querySelector(".manual-tip");
+  detail.querySelectorAll("[data-mode]").forEach(button=>button.setAttribute("aria-selected",String(button.dataset.mode===mode)));
+  demoEl.className=demoEl.className.replace(/ manual-demo| paused| open| active| loaded/g,"");
+  if(mode==="auto"){tip.textContent="动画会自动循环播放";return;}
+  demoEl.classList.add("manual-demo");
+  const type=groups[currentGroup].id;
+  if(type==="select"){tip.textContent="点击输入框，再点击一个选项";const field=demoEl.querySelector(".field");field.addEventListener("click",()=>demoEl.classList.toggle("open"));demoEl.querySelectorAll(".menu span").forEach(option=>option.addEventListener("click",()=>{field.firstChild.textContent=option.textContent;demoEl.classList.remove("open");tip.textContent=`已选择：${option.textContent}`;}));}
+  if(type==="expand"){tip.textContent="点击圆点，展开或收起状态";demoEl.querySelector(".bar").addEventListener("click",()=>demoEl.classList.toggle("active"));}
+  if(type==="drag"){tip.textContent="把卡片拖到中间的放置区域";const card=demoEl.querySelector(".card");card.draggable=true;card.addEventListener("dragstart",()=>card.classList.add("dragged"));demoEl.querySelectorAll(".slot").forEach(slot=>{slot.addEventListener("dragover",event=>event.preventDefault());slot.addEventListener("drop",()=>{card.classList.add("dragged");tip.textContent="已移动到新位置";});});}
+  if(type==="panel"){tip.textContent="点击页面打开抽屉，点击抽屉关闭";demoEl.addEventListener("click",()=>demoEl.classList.toggle("open"));}
+  if(type==="nav"){tip.textContent="点击左侧导航，展开或收起";demoEl.querySelector(".side").addEventListener("click",()=>demoEl.classList.toggle("open"));}
+  if(type==="loading"){tip.textContent="点击区域，模拟加载完成或重新加载";demoEl.addEventListener("click",()=>{demoEl.classList.toggle("loaded");tip.textContent=demoEl.classList.contains("loaded")?"加载完成":"正在重新加载…";});}
+  if(type==="chart"){tip.textContent="在图表中移动鼠标，查看十字线";const guide=demoEl.querySelector(".guide");demoEl.addEventListener("pointermove",event=>{const rect=demoEl.getBoundingClientRect(),x=Math.max(0,Math.min(170,(event.clientX-rect.left)/rect.width*320-65));guide.style.display="block";demoEl.style.setProperty("--chart-x",`${x}px`);});}
+  if(type==="dashboard"){tip.textContent="点击卡片，切换重点区域";demoEl.addEventListener("click",()=>demoEl.classList.toggle("active"));}
 }
 
 function copyText(text){navigator.clipboard?.writeText(text).then(showToast).catch(()=>{const input=document.createElement("textarea");input.value=text;document.body.append(input);input.select();document.execCommand("copy");input.remove();showToast();});}
