@@ -6,10 +6,10 @@ button,a { color:inherit; font:inherit; }
 button { cursor:pointer; }
 a { text-decoration:none; }
 p,h1,h2,h3 { margin-top:0; }
-.topbar { position:sticky; z-index:20; top:0; height:60px; display:flex; align-items:center; justify-content:space-between; padding:0 max(20px,calc((100vw - 1120px)/2)); color:#fff; background:rgba(20,21,21,.96); border-bottom:1px solid #292b2b; backdrop-filter:blur(12px); }
+.topbar { position:sticky; z-index:20; top:0; height:60px; display:flex; align-items:center; justify-content:space-between; padding:0 max(20px,calc((100vw - 1120px)/2)); color:var(--ink); background:rgba(255,255,255,.96); border-bottom:1px solid var(--line); backdrop-filter:blur(12px); }
 .brand { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:750; }
 .brand span { width:28px; height:28px; display:grid; place-items:center; color:#fff; background:var(--blue); border-radius:6px; font-size:10px; }
-.top-link { color:#bbc1c0; font-size:13px; }
+.top-link { color:var(--muted); font-size:13px; }
 .intro { max-width:1120px; min-height:470px; margin:auto; padding:100px 0 76px; }
 .eyebrow { margin-bottom:13px; color:var(--blue); font-size:10px; font-weight:800; letter-spacing:.18em; }
 h1 { margin-bottom:22px; font-size:clamp(48px,6vw,74px); line-height:1.06; letter-spacing:-.055em; }
