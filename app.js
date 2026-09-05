@@ -57,14 +57,26 @@ let currentGroup = 0;
 let currentItem = 0;
 const categoryGrid = document.querySelector("#category-nav");
 const detail = document.querySelector("#detail");
+const locationTree = [
+  {name:"浙江省",children:[{name:"杭州市",children:["西湖区","滨江区","余杭区"]},{name:"宁波市",children:["海曙区","鄞州区","北仑区"]}]},
+  {name:"广东省",children:[{name:"广州市",children:["天河区","越秀区","海珠区"]},{name:"深圳市",children:["南山区","福田区","宝安区"]}]},
+  {name:"江苏省",children:[{name:"南京市",children:["鼓楼区","建邺区","秦淮区"]},{name:"苏州市",children:["姑苏区","吴中区","工业园区"]}]},
+  {name:"四川省",children:[{name:"成都市",children:["锦江区","武侯区","高新区"]},{name:"绵阳市",children:["涪城区","游仙区"]}]},
+  {name:"湖南省",children:[{name:"长沙市",children:["岳麓区","芙蓉区","雨花区"]},{name:"株洲市",children:["天元区","芦淞区"]}]},
+  {name:"北京市",children:[{name:"北京市",children:["朝阳区","海淀区","东城区"]}]},
+  {name:"上海市",children:[{name:"上海市",children:["浦东新区","徐汇区","静安区"]}]}
+];
+const locationPaths=locationTree.flatMap(province=>province.children.flatMap(city=>city.children.map(area=>[province.name,city.name,area])));
+const pathButtons=(paths=locationPaths.slice(0,5))=>paths.map(path=>`<button type="button" data-path="${path.join("|")}"><b>${path.at(-1)}</b><small>${path.join(" / ")}</small></button>`).join("");
+const initialCascade=()=>`<div class="cascade-col provinces">${locationTree.map((province,index)=>`<button class="${index===0?'chosen':''}">${province.name}<b>›</b></button>`).join('')}</div><div class="cascade-col cities">${locationTree[0].children.map((city,index)=>`<button class="${index===0?'chosen':''}">${city.name}<b>›</b></button>`).join('')}</div><div class="cascade-col areas">${locationTree[0].children[0].children.map((area,index)=>`<button class="${index===0?'chosen':''}">${area}</button>`).join('')}</div>`;
 
 function demo(type, item) {
   const key=`${type}-${item}`;
   const demos={
     "select-0":`<button class="ui-select trigger" type="button">请选择地区 <b>⌄</b></button><div class="ui-menu"><button>北京市</button><button>上海市</button><button>广东省</button></div>`,
-    "select-1":`<div class="search-select"><input aria-label="搜索城市" placeholder="搜索城市"><div class="search-options"><button>上海市</button><button>长沙市</button><button>成都市</button><p class="empty">没有匹配项</p></div></div>`,
-    "select-2":`<div class="cascader"><div><button class="chosen">浙江省 ›</button><button>广东省 ›</button></div><div><button>杭州市 ›</button><button>宁波市 ›</button></div><div><button>西湖区</button><button>滨江区</button></div></div><p class="demo-result">浙江省 / 杭州市 / 西湖区</p>`,
-    "select-3":`<div class="multi-field"><span>华东 ×</span><span>华南 ×</span><b>已选 2 项</b></div><div class="check-list"><button class="checked">✓ 华东</button><button class="checked">✓ 华南</button><button>华北</button></div>`,
+    "select-1":`<div class="search-select"><label><span>⌕</span><input aria-label="搜索地区" placeholder="搜索省、市或区"></label><div class="search-options">${pathButtons()}</div></div><p class="demo-result">输入“深圳”或“南山”试试</p>`,
+    "select-2":`<div class="cascader-shell"><label><span>⌕</span><input class="cascade-search" aria-label="搜索省市区" placeholder="搜索省、市或区"></label><div class="cascade-matches"></div><div class="cascader">${initialCascade()}</div></div><p class="demo-result">请选择省、市、区</p>`,
+    "select-3":`<div class="multi-select"><div class="multi-field"><div class="multi-tags"><span>华东 ×</span><span>华南 ×</span></div><b>已选 2 项</b></div><div class="check-list"><button data-value="华东" class="checked">✓ 华东</button><button data-value="华南" class="checked">✓ 华南</button><button data-value="华北">华北</button><button data-value="西南">西南</button><button class="clear-multi">清空</button></div></div>`,
     "select-4":`<div class="quick-range"><button>最近 7 天</button><button>最近 30 天</button></div><div class="calendar">${Array.from({length:14},(_,i)=>`<button>${i+1}</button>`).join("")}</div><p class="demo-result">请选择开始日期</p>`,
     "expand-0":`<button class="pill-toggle" type="button"><i></i><span>已保存</span></button>`,
     "expand-1":`<div class="accordion-demo"><button class="accordion-head">订单明细 <b>⌄</b></button><div class="accordion-body"><p>商品金额　¥ 1,280</p><p>优惠金额　− ¥ 80</p></div></div>`,
@@ -77,26 +89,26 @@ function demo(type, item) {
     "panel-0":`<div class="tooltip-stage"><button class="info-target">?</button><div class="tooltip-bubble">统计周期内的去重用户数</div></div>`,
     "panel-1":`<div class="popover-stage"><button class="avatar">YC</button><div class="popover-card"><b>言川</b><button>查看资料</button><button>发送消息</button></div></div>`,
     "panel-2":`<div class="mini-page"><button class="open-layer">查看详情</button></div><div class="drawer-layer"><button class="close-layer">×</button><b>项目详情</b><p>负责人　林晓</p><p>状态　进行中</p></div>`,
-    "panel-3":`<div class="mini-page"><button class="open-layer">筛选</button></div><div class="sheet-layer"><i></i><b>选择筛选条件</b><button>仅看进行中</button><button>仅看我负责</button></div>`,
+    "panel-3":`<div class="mini-page"><button class="open-layer">筛选</button><p class="sheet-result">全部项目</p></div><div class="sheet-layer"><i></i><b>选择筛选条件</b><button data-filter="仅看进行中">仅看进行中</button><button data-filter="仅看我负责">仅看我负责</button><button class="close-sheet">取消</button></div>`,
     "panel-4":`<div class="mini-page"><button class="open-layer danger">删除项目</button></div><div class="modal-mask"><div class="modal-card"><b>确认删除？</b><p>删除后无法恢复。</p><button class="cancel">取消</button><button class="confirm">确认删除</button></div></div>`,
     "nav-0":`<div class="tabs-demo"><div><button class="active">概览</button><button>数据</button><button>成员</button></div><p>概览内容</p></div>`,
     "nav-1":`<div class="stepper-demo"><ol><li class="done">1 基本信息</li><li class="current">2 配置权限</li><li>3 完成</li></ol><button>下一步</button></div>`,
     "nav-2":`<nav class="crumb-demo"><button>首页</button><i>›</i><button>项目</button><i>›</i><b>销售看板</b></nav><p class="demo-result">销售看板</p>`,
-    "nav-3":`<div class="collapse-nav"><button class="nav-toggle">☰</button><button><i>⌂</i><span>概览</span></button><button><i>▥</i><span>数据分析</span></button><button><i>⚙</i><span>设置</span></button></div><div class="nav-main">内容区域</div>`,
+    "nav-3":`<div class="collapse-nav"><button class="nav-toggle">☰</button><button class="active" data-page="概览"><i>⌂</i><span>概览</span></button><button data-page="数据分析"><i>▥</i><span>数据分析</span></button><button data-page="设置"><i>⚙</i><span>设置</span></button></div><div class="nav-main">概览内容</div>`,
     "nav-4":`<div class="anchor-page"><div><section>01 概览</section><section>02 趋势</section><section>03 明细</section></div><nav><button class="active">概览</button><button>趋势</button><button>明细</button></nav></div>`,
     "loading-0":`<div class="skeleton-card"><div class="sk-title"></div><div class="sk-number"></div><div class="sk-chart"></div><div class="loaded-content"><span>本月收入</span><b>¥ 128,600</b><i></i></div></div>`,
     "loading-1":`<div class="progress-demo"><b>正在导入数据</b><div><i></i></div><span>0%</span><button>重新播放</button></div>`,
     "loading-2":`<button class="loading-button"><i></i><span>提交报表</span></button><p class="demo-result">点击按钮提交</p>`,
-    "loading-3":`<div class="inline-layout"><div class="filter-row"><button>近 30 天</button><button>全部渠道</button></div><div class="inline-card"><svg viewBox="0 0 240 80"><path d="M5 65L55 42L105 53L155 20L235 32"/></svg><div class="inline-loader">加载中…</div></div></div>`,
+    "loading-3":`<div class="inline-layout"><div class="filter-row"><button data-values="近 30 天|近 7 天|今天">近 30 天</button><button data-values="全部渠道|自然流量|付费投放">全部渠道</button></div><div class="inline-card"><svg viewBox="0 0 240 80"><path d="M5 65L55 42L105 53L155 20L235 32"/></svg><div class="inline-loader">加载中…</div></div></div>`,
     "chart-0":chartMarkup("line"),
     "chart-1":`<div class="bar-chart"><button style="--h:45%" data-value="一月 · 42 万"></button><button style="--h:72%" data-value="二月 · 68 万"></button><button style="--h:58%" data-value="三月 · 55 万"></button><div class="chart-tip">二月 · 68 万</div></div>`,
     "chart-2":`<div class="legend-demo"><div class="legend-row"><button data-series="a">● 订单量</button><button data-series="b">● 成交额</button></div><svg viewBox="0 0 300 130"><path class="series-a" d="M10 95L65 65L120 78L180 32L235 55L290 20"/><path class="series-b" d="M10 110L65 90L120 48L180 72L235 38L290 58"/></svg></div>`,
     "chart-3":`<div class="brush-demo"><svg viewBox="0 0 300 130"><path d="M8 100L50 84L92 92L134 45L176 68L218 35L292 52"/></svg><div class="brush-range"></div><button>恢复全部</button></div>`,
     "chart-4":`<div class="drill-demo"><div class="drill-crumb"><button>全国</button><span></span></div><div class="drill-bars"><button data-region="华东" style="--h:82%">华东</button><button data-region="华南" style="--h:64%">华南</button><button data-region="华北" style="--h:48%">华北</button></div></div>`,
-    "dashboard-0":`<div class="minimal-dash"><header>业务概览 <button>近 30 天⌄</button></header><div><article><span>成交额</span><b>¥ 2.86M</b><em>+12.4%</em></article><article><span>订单量</span><b>18,492</b><em>+6.8%</em></article></div><svg viewBox="0 0 300 70"><path d="M5 62L55 50L105 55L155 28L205 38L250 12L295 22"/></svg></div>`,
+    "dashboard-0":`<div class="minimal-dash"><header>业务概览 <button data-values="近 30 天⌄|近 7 天⌄|今天⌄">近 30 天⌄</button></header><div><button class="metric-card"><span>成交额</span><b>¥ 2.86M</b><em>+12.4%</em></button><button class="metric-card"><span>订单量</span><b>18,492</b><em>+6.8%</em></button></div><svg viewBox="0 0 300 70"><path d="M5 62L55 50L105 55L155 28L205 38L250 12L295 22"/></svg></div>`,
     "dashboard-1":`<div class="bento-dash"><button class="wide">核心指标<b>¥ 2.86M</b></button><button>转化率<b>6.8%</b></button><button>用户数<b>42K</b></button><button class="long">趋势分析</button></div>`,
     "dashboard-2":`<div class="ops-dash"><header>实时监控 <i></i></header><div><button>服务可用率<b>99.98%</b></button><button class="alert">异常任务<b>3</b></button></div><p>流量 1,248 req/s　 延迟 32ms</p></div>`,
-    "dashboard-3":`<div class="dense-dash"><div class="dense-filters"><button>渠道：全部</button><button>地区：全国</button></div><table><thead><tr><th>业务线</th><th>收入</th><th>同比</th></tr></thead><tbody><tr><td>电商</td><td>286万</td><td>+12%</td></tr><tr><td>广告</td><td>192万</td><td>+8%</td></tr><tr><td>服务</td><td>86万</td><td>−2%</td></tr></tbody></table></div>`
+    "dashboard-3":`<div class="dense-dash"><div class="dense-filters"><button data-values="渠道：全部|渠道：自然流量|渠道：付费投放">渠道：全部</button><button data-values="地区：全国|地区：华东|地区：华南">地区：全国</button></div><table><thead><tr><th>业务线</th><th>收入</th><th>同比</th></tr></thead><tbody><tr><td>电商</td><td>286万</td><td>+12%</td></tr><tr><td>广告</td><td>192万</td><td>+8%</td></tr><tr><td>服务</td><td>86万</td><td>−2%</td></tr></tbody></table></div>`
   };
   return `<div class="demo component-demo" data-demo="${key}"><div class="demo-scene">${demos[key]}</div></div>`;
 }
@@ -137,10 +149,10 @@ function bindManualDemo(root,key,tip){
   const [type,indexText]=key.split("-"), index=Number(indexText); say(instructions[type][index]);
 
   if(key==="select-0"){$(".trigger").onclick=()=>toggle(".ui-menu");$$('.ui-menu button').forEach(b=>b.onclick=()=>{$('.trigger').firstChild.textContent=`${b.textContent} `;toggle('.ui-menu');say(`已选择：${b.textContent}`);});}
-  if(key==="select-1"){const input=$("input");input.oninput=()=>{let count=0;$$('.search-options button').forEach(b=>{const show=b.textContent.includes(input.value);b.hidden=!show;if(show)count++;});$('.empty').style.display=count?'none':'block';say(count?`找到 ${count} 个结果`:'没有匹配项');};$$('.search-options button').forEach(b=>b.onclick=()=>{input.value=b.textContent;say(`已选择：${b.textContent}`);});input.focus();}
-  if(key==="select-2"){$$('.cascader button').forEach(b=>b.onclick=()=>{b.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('chosen'));b.classList.add('chosen');$('.demo-result').textContent=`当前选择：${b.textContent.replace(' ›','')}`;});}
-  if(key==="select-3"){$$('.check-list button').forEach(b=>b.onclick=()=>{b.classList.toggle('checked');b.textContent=(b.classList.contains('checked')?'✓ ':'')+b.textContent.replace('✓ ','');const n=$$('.check-list .checked').length;$('.multi-field b').textContent=`已选 ${n} 项`;say(`当前已选 ${n} 项`);});}
-  if(key==="select-4"){let start=null;$$('.calendar button').forEach(b=>b.onclick=()=>{const day=Number(b.textContent);if(start===null){start=day;$$('.calendar button').forEach(x=>x.classList.remove('range','edge'));b.classList.add('edge');$('.demo-result').textContent=`开始日：${day} 日，请选择结束日`;}else{const a=Math.min(start,day),z=Math.max(start,day);$$('.calendar button').forEach(x=>{const n=Number(x.textContent);x.classList.toggle('range',n>=a&&n<=z);x.classList.toggle('edge',n===a||n===z);});$('.demo-result').textContent=`已选择：${a} 日 — ${z} 日`;say(`已选择 ${z-a+1} 天`);start=null;}});$$('.quick-range button').forEach(b=>b.onclick=()=>say(`已选择：${b.textContent}`));}
+  if(key==="select-1"){const input=$("input"),options=$(".search-options"),result=$(".demo-result");const bindResults=paths=>{options.innerHTML=paths.length?pathButtons(paths):'<p class="empty">没有匹配地区</p>';$$('.search-options button').forEach(b=>b.onclick=()=>{const path=b.dataset.path.split('|');input.value=path.at(-1);result.textContent=`已选择：${path.join(' / ')}`;say(`已选择：${path.at(-1)}`);});};input.oninput=()=>{const keyword=input.value.trim().toLowerCase(),matches=keyword?locationPaths.filter(path=>path.join(' ').toLowerCase().includes(keyword)):locationPaths.slice(0,5);bindResults(matches);result.textContent=keyword?(matches.length?`找到 ${matches.length} 个地区`:'没有匹配地区'):'输入“深圳”或“南山”试试';say(matches.length?`找到 ${matches.length} 个结果`:'没有匹配地区');};bindResults(locationPaths.slice(0,5));input.focus();}
+  if(key==="select-2") bindCascader(root,say);
+  if(key==="select-3"){const selected=new Set(['华东','华南']),renderTags=()=>{$('.multi-tags').innerHTML=[...selected].map(value=>`<span data-value="${value}">${value} ×</span>`).join('');$('.multi-field b').textContent=`已选 ${selected.size} 项`;$$('.multi-tags span').forEach(tag=>tag.onclick=()=>{selected.delete(tag.dataset.value);renderTags();syncChecks();say(`已移除：${tag.dataset.value}`);});},syncChecks=()=>{$$('.check-list [data-value]').forEach(b=>{const checked=selected.has(b.dataset.value);b.classList.toggle('checked',checked);b.textContent=`${checked?'✓ ':''}${b.dataset.value}`;});};$$('.check-list [data-value]').forEach(b=>b.onclick=()=>{selected.has(b.dataset.value)?selected.delete(b.dataset.value):selected.add(b.dataset.value);syncChecks();renderTags();say(`当前已选 ${selected.size} 项`);});$('.clear-multi').onclick=()=>{selected.clear();syncChecks();renderTags();say('已清空所有选项');};renderTags();}
+  if(key==="select-4"){let start=null;const days=$$('.calendar button'),setRange=(a,z)=>{days.forEach(x=>{const n=Number(x.textContent);x.classList.toggle('range',n>=a&&n<=z);x.classList.toggle('edge',n===a||n===z);});$('.demo-result').textContent=`已选择：${a} 日 — ${z} 日`;say(`已选择 ${z-a+1} 天`);};days.forEach(b=>b.onclick=()=>{const day=Number(b.textContent);if(start===null){start=day;days.forEach(x=>x.classList.remove('range','edge'));b.classList.add('edge');$('.demo-result').textContent=`开始日：${day} 日，请选择结束日`;say(`开始日期：${day} 日`);}else{setRange(Math.min(start,day),Math.max(start,day));start=null;}});$$('.quick-range button').forEach((b,i)=>b.onclick=()=>setRange(i?1:8,14));}
   if(key==="expand-0"){$('.pill-toggle').onclick=()=>{toggle('.pill-toggle','open');say($('.pill-toggle').classList.contains('open')?'状态已展开':'状态已收起');};}
   if(key==="expand-1"){$('.accordion-head').onclick=()=>{toggle('.accordion-demo');say($('.accordion-demo').classList.contains('open')?'订单明细已展开':'订单明细已收起');};}
   if(key==="expand-2"){$('.push-card button').onclick=()=>{toggle('.push-stack');say($('.push-stack').classList.contains('open')?'详情已展开，下方内容被推开':'详情已收起');};}
@@ -150,24 +162,47 @@ function bindManualDemo(root,key,tip){
   if(key==="drag-2") makeFreeMove($('.free-node'),$('.free-canvas'),say);
   if(key==="drag-3") makeResize($('.resize-box'),$('.resize-handle'),say);
   if(key==="panel-0"){$('.info-target').onclick=()=>toggle('.tooltip-stage');}
-  if(key==="panel-1"){$('.avatar').onclick=()=>toggle('.popover-stage');}
-  if(type==="panel"&&index>=2){$('.open-layer').onclick=()=>{root.classList.add('open');say('已打开，可点击关闭或完成操作');};$('.close-layer')?.addEventListener('click',()=>root.classList.remove('open'));$('.cancel')?.addEventListener('click',()=>root.classList.remove('open'));$('.confirm')?.addEventListener('click',()=>{root.classList.remove('open');say('项目已删除（演示）');});$('.sheet-layer')?.addEventListener('click',()=>root.classList.remove('open'));}
+  if(key==="panel-1"){$('.avatar').onclick=()=>toggle('.popover-stage');$$('.popover-card button').forEach(b=>b.onclick=()=>{say(`已选择：${b.textContent}`);$('.popover-stage').classList.remove('open');});}
+  if(type==="panel"&&index>=2){$('.open-layer').onclick=()=>{root.classList.add('open');say('已打开，可点击关闭或完成操作');};$('.close-layer')?.addEventListener('click',()=>root.classList.remove('open'));$('.cancel')?.addEventListener('click',()=>root.classList.remove('open'));$('.confirm')?.addEventListener('click',()=>{root.classList.remove('open');say('项目已删除（演示）');});}
+  if(key==="panel-3"){$$('[data-filter]').forEach(b=>b.onclick=()=>{$('.sheet-result').textContent=b.dataset.filter;root.classList.remove('open');say(`筛选已生效：${b.dataset.filter}`);});$('.close-sheet').onclick=()=>{root.classList.remove('open');say('已取消筛选');};}
   if(key==="nav-0"){$$('.tabs-demo button').forEach(b=>b.onclick=()=>{$$('.tabs-demo button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('.tabs-demo p').textContent=`${b.textContent}内容`;say(`已切换到：${b.textContent}`);});}
   if(key==="nav-1"){let step=2;$('.stepper-demo button').onclick=()=>{step=step===3?1:step+1;$$('.stepper-demo li').forEach((li,i)=>{li.className=i+1<step?'done':i+1===step?'current':'';});say(`当前第 ${step} 步`);};}
   if(key==="nav-2"){$$('.crumb-demo button').forEach(b=>b.onclick=()=>{$('.demo-result').textContent=b.textContent;say(`已返回：${b.textContent}`);});}
-  if(key==="nav-3"){$('.nav-toggle').onclick=()=>{toggle('.collapse-nav','collapsed');say($('.collapse-nav').classList.contains('collapsed')?'侧栏已收起':'侧栏已展开');};}
+  if(key==="nav-3"){$('.nav-toggle').onclick=()=>{toggle('.collapse-nav','collapsed');say($('.collapse-nav').classList.contains('collapsed')?'侧栏已收起':'侧栏已展开');};$$('.collapse-nav [data-page]').forEach(b=>b.onclick=()=>{$$('.collapse-nav [data-page]').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('.nav-main').textContent=`${b.dataset.page}内容`;say(`已切换到：${b.dataset.page}`);});}
   if(key==="nav-4"){$$('.anchor-page nav button').forEach((b,i)=>b.onclick=()=>{$$('.anchor-page nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('.anchor-page section').parentElement.style.transform=`translateY(-${i*72}px)`;say(`已定位到：${b.textContent}`);});}
   if(key==="loading-0"){$('.skeleton-card').onclick=()=>{toggle('.skeleton-card','complete');say($('.skeleton-card').classList.contains('complete')?'真实内容已淡入':'重新显示骨架结构');};}
   if(key==="loading-1"){$('.progress-demo button').onclick=()=>runProgress(root,say);}
   if(key==="loading-2"){$('.loading-button').onclick=()=>{const b=$('.loading-button');if(b.classList.contains('loading'))return;b.classList.add('loading');b.querySelector('span').textContent='提交中';say('正在提交，请稍候…');setTimeout(()=>{b.classList.remove('loading');b.classList.add('success');b.querySelector('span').textContent='提交成功';say('提交成功');},900);};}
-  if(key==="loading-3"){$('.inline-card').onclick=()=>{$('.inline-loader').classList.add('show');say('只刷新当前图表，筛选仍可操作');setTimeout(()=>{$('.inline-loader').classList.remove('show');say('图表刷新完成');},900);};}
+  if(key==="loading-3"){$('.inline-card').onclick=()=>{$('.inline-loader').classList.add('show');say('只刷新当前图表，筛选仍可操作');setTimeout(()=>{$('.inline-loader').classList.remove('show');say('图表刷新完成');},900);};bindCycleButtons($$('.filter-row [data-values]'),say);}
   if(key==="chart-0"){const chart=$('.cross-chart');chart.onpointermove=e=>{const r=chart.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;root.style.setProperty('--mx',`${x}px`);root.style.setProperty('--my',`${y}px`);root.classList.add('tracking');$('.cross-tip').textContent=`${Math.max(1,Math.round(x/r.width*12))}月 · ${Math.round((1-y/r.height)*90+20)}万`;};chart.onpointerleave=()=>root.classList.remove('tracking');}
   if(key==="chart-1"){$$('.bar-chart button').forEach(b=>{const show=()=>{$('.chart-tip').textContent=b.dataset.value;$('.chart-tip').style.left=`${b.offsetLeft+b.offsetWidth/2}px`;};b.onpointerenter=show;b.onclick=show;});}
   if(key==="chart-2"){$$('.legend-row button').forEach(b=>b.onclick=()=>{b.classList.toggle('off');root.classList.toggle(`hide-${b.dataset.series}`);say(`${b.textContent.replace('● ','')}已${b.classList.contains('off')?'隐藏':'恢复'}`);});}
   if(key==="chart-3") makeBrush($('.brush-demo'),say);
   if(key==="chart-4"){$$('.drill-bars button').forEach(b=>b.onclick=()=>drill(root,b.dataset.region,say));$('.drill-crumb button').onclick=()=>setDemoMode('manual');}
-  if(type==="dashboard"){$$('button').forEach(b=>b.onclick=()=>{root.querySelectorAll('.focused').forEach(x=>x.classList.remove('focused'));b.classList.add('focused');say(`已聚焦：${b.textContent.trim()}`);});}
+  if(type==="dashboard"){$$('button:not([data-values])').forEach(b=>b.onclick=()=>{root.querySelectorAll('.focused').forEach(x=>x.classList.remove('focused'));b.classList.add('focused');say(`已聚焦：${b.textContent.trim()}`);});bindCycleButtons($$('[data-values]'),say);}
 }
+
+function bindCascader(root,say){
+  const $=selector=>root.querySelector(selector), $$=selector=>[...root.querySelectorAll(selector)];
+  const state={province:0,city:0,area:null};
+  const result=$('.demo-result'),search=$('.cascade-search'),matches=$('.cascade-matches');
+  const path=()=>[locationTree[state.province].name,locationTree[state.province].children[state.city].name,state.area].filter(Boolean);
+  const render=()=>{
+    const province=locationTree[state.province],city=province.children[state.city];
+    $('.provinces').innerHTML=locationTree.map((p,i)=>`<button data-province="${i}" class="${i===state.province?'chosen':''}">${p.name}<b>›</b></button>`).join('');
+    $('.cities').innerHTML=province.children.map((c,i)=>`<button data-city="${i}" class="${i===state.city?'chosen':''}">${c.name}<b>›</b></button>`).join('');
+    $('.areas').innerHTML=city.children.map(area=>`<button data-area="${area}" class="${area===state.area?'chosen':''}">${area}</button>`).join('');
+    $$('[data-province]').forEach(b=>b.onclick=()=>{state.province=Number(b.dataset.province);state.city=0;state.area=null;render();result.textContent=`当前选择：${locationTree[state.province].name}`;say('上级已切换，下级选项已更新');});
+    $$('[data-city]').forEach(b=>b.onclick=()=>{state.city=Number(b.dataset.city);state.area=null;render();result.textContent=`当前选择：${path().join(' / ')}`;say('城市已切换，区县选项已更新');});
+    $$('[data-area]').forEach(b=>b.onclick=()=>{state.area=b.dataset.area;render();result.textContent=`已选择：${path().join(' / ')}`;say(`已选择：${state.area}`);});
+  };
+  const showMatches=paths=>{matches.innerHTML=paths.length?pathButtons(paths):'<p>没有匹配地区</p>';matches.classList.add('show');$$('.cascade-matches button').forEach(b=>b.onclick=()=>{const selected=b.dataset.path.split('|'),pIndex=locationTree.findIndex(p=>p.name===selected[0]);state.province=pIndex;state.city=locationTree[pIndex].children.findIndex(c=>c.name===selected[1]);state.area=selected[2];search.value=selected.at(-1);matches.classList.remove('show');render();result.textContent=`已选择：${selected.join(' / ')}`;say(`已匹配并选择：${selected.at(-1)}`);});};
+  search.oninput=()=>{const keyword=search.value.trim().toLowerCase();if(!keyword){matches.classList.remove('show');return;}showMatches(locationPaths.filter(item=>item.join(' ').toLowerCase().includes(keyword)));};
+  search.onfocus=()=>{if(search.value.trim())search.oninput();};
+  render();
+}
+
+function bindCycleButtons(buttons,say){buttons.forEach(button=>button.onclick=()=>{const values=button.dataset.values.split('|'),next=(values.indexOf(button.textContent.trim())+1)%values.length;button.textContent=values[next];say(`已切换为：${values[next].replace('⌄','')}`);});}
 
 function makeDraggable(el,bounds,onDrop){let startX=0,startY=0;el.onpointerdown=e=>{e.preventDefault();startX=e.clientX;startY=e.clientY;el.setPointerCapture(e.pointerId);el.classList.add('dragging');};el.onpointermove=e=>{if(!el.hasPointerCapture(e.pointerId))return;el.style.transform=`translate(${e.clientX-startX}px,${e.clientY-startY}px)`;};el.onpointerup=e=>{if(!el.hasPointerCapture(e.pointerId))return;el.releasePointerCapture(e.pointerId);el.classList.remove('dragging');el.style.transform='';onDrop(e.clientX,e.clientY);};}
 function makeSortable(list,say){let dragged=null;[...list.children].forEach(item=>{item.onpointerdown=e=>{dragged=item;item.setPointerCapture(e.pointerId);item.classList.add('dragging');};item.onpointermove=e=>{if(!dragged)return;const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('.sortable-list button');if(target&&target!==dragged)list.insertBefore(dragged,e.clientY<target.getBoundingClientRect().top+target.offsetHeight/2?target:target.nextSibling);};item.onpointerup=e=>{item.releasePointerCapture(e.pointerId);item.classList.remove('dragging');dragged=null;say('顺序已更新，可继续拖动');};});}
